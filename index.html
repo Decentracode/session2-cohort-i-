@@ -1,116 +1,117 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <style>
-        body {
-            text-align: center;
-            font-family: sans-serif;
-        }
-
-        div {
-            width: 20%;
-            margin:0 auto;
-            display: flex;
-            flex-direction: column;
-        }
-
-        button {
-            width: 100%;
-            margin: 10px 0 5px 0;
-        }
-    </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cohort First DAPP</title>
+    <title>Simple Web App</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <script>
-        // declaring variables
-        var getMyData;
-        var setMyData;
-        </script>
+    <div class="container">
+        <h1><button id="connect-wallet">Connect Wallet</button><p style="font-size: x-small;">push and pull data from</p> <p style="font-size: 50%;">sepolia</p></h1>
+        
+        <input type="text" id="inputField" placeholder="Enter text here to be pushed to the blockchain">
+        <button id="button1">push data</button>
+        <button id="button2">pull data</button>
+        <div id="output" style="border: 2px solid #4CAF50; padding: 15px; margin-top: 20px; background-color: #e8f5e9; border-radius: 5px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <p style="color: #888;">pulled data will be displayed here...</p>
+        </div>
 
-    <script type="module">
-      //  Setting Up a Wallet Client
-      import {
-        createWalletClient,
-        custom,
-        getContract,
+        <!-- Script tag with type module -->
+        <script type="module">
+            // Import necessary modules
+            import {
+                createWalletClient,
+                custom,
+                getContract,
+            } from "https://esm.sh/viem";
+            import { sepolia } from "https://esm.sh/viem/chains";
 
-      } from "https://esm.sh/viem";
-      import {sepolia } from "https://esm.sh/viem/chains";
+            // Variables
+            let WalletClient;
+            let address;
+            let DataContractInstance;
 
-     //   Creating an account to connect user's wallet to Ethereum Sep0lia Testnet
-      const WalletClient = createWalletClient({
-        chain: sepolia,
-        transport: custom(window.ethereum),
-      });
-      
-    //   Making the wallet address show up  as a pop up
-    const accounts = await WalletClient.requestAddresses();
+            // Connect wallet button event listener
+            document.getElementById('connect-wallet').addEventListener('click', async () => {
+                // Create wallet client
+                WalletClient = createWalletClient({
+                    chain: sepolia,
+                    transport: custom(window.ethereum),
+                });
 
-    //get the first address in the array
-    const [address] = accounts;
+                // Request addresses
+                const accounts = await WalletClient.requestAddresses();
 
-    //Accessing the Data contract address.
-    const DataContractAddress = "0x941Ee4D467B7D172ae240A79Cb6704840a38cE0E"
-    const DataContractAbi = [
- {
-  "inputs": [
-   {
-    "internalType": "string",
-    "name": "_data",
-    "type": "string"
-   }
-  ],
-  "name": "setData",
-  "outputs": [],
-  "stateMutability": "nonpayable",
-  "type": "function"
- },
- {
-  "inputs": [],
-  "name": "getData",
-  "outputs": [
-   {
-    "internalType": "string",
-    "name": "",
-    "type": "string"
-   }
-  ],
-  "stateMutability": "view",
-  "type": "function"
- }
-];
+                // Get first address in array
+                [address] = accounts;
 
-    const DataContractInstance = getContract({
-        address: DataContractAddress,
-        abi: DataContractAbi,
-        client: WalletClient,
-    });
+                console.log('Connected to wallet:', address);
 
-    getMyData = async function() {
-        const data = await DataContractInstance.read.getData();
-        document.getElementById("showData").innerText = `Your Data is : ${data}`;
-    }
+                // Accessing the Data contract address.
+                const DataContractAddress = "0x941Ee4D467B7D172ae240A79Cb6704840a38cE0E"
+                const DataContractAbi = [
+                    {
+                        "inputs": [
+                            {
+                                "internalType": "string",
+                                "name": "_data",
+                                "type": "string"
+                            }
+                        ],
+                        "name": "setData",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "getData",
+                        "outputs": [
+                            {
+                                "internalType": "string",
+                                "name": "",
+                                "type": "string"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ];
 
-    setMyData = async function() {
-        const data =document.getElementById("data").value;
-        await DataContractInstance.write.setData([data], {account:address});
-    }
+                // Get contract instance
+                DataContractInstance = getContract({
+                    address: DataContractAddress,
+                    abi: DataContractAbi,
+                    client: WalletClient,
+                });
+            });
 
-    </script>
-    <div>
+            // Push data button event listener
+            document.getElementById('button1').addEventListener('click', async () => {
+                if (!DataContractInstance) return console.log('Please connect your wallet first');
 
-        <h1>Cohort First DAPP</h1>
-        <p>Lets set and Get Data from the blockchain.</p>
-        <label for="data">Input Data</label>
-        <input type="text" id="data" name="data">
-        <button onclick="getMyData()">Get Data</button>
-        <button onclick="setMyData()">Set Data</button>
-        <p id="showData"></p>
-    </div>
-   
-</body>
+                const data = document.getElementById("inputField").value;
+                
+ 　 　 　 　 　　// setData 
+ 　 　 　 　 　　await DataContractInstance.write.setData([data], { account: address });
+ 　 　 　 　　console.log("Data has been pushed");
+　 　 　 　 });
 
+　 　 　 　　// Pull data button event listener 
+　 　 　 　　document.getElementById('button2').addEventListener('click', async () => {
+　 　 　 　 　 if (!DataContractInstance) return console.log('Please connect your wallet first');
 
-</html>
+　 　 　 　 　　const data = await DataContractInstance.read.getData();
+　 　 　 　　   document.getElementById("output").innerText = `Your pulled data is : ${data}`;
+　 　 　 　　});
+　 　 　 </script>
+
+　 　 　 <!-- End of container div -->
+　 　 　 </div>
+
+　 　 　 <!-- End of body -->
+　 　 　 </body>
+
+　 　 　 <!-- End of html -->
+　 　 　 </html> 
